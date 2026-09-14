@@ -1,0 +1,275 @@
+```java
+import java.time.LocalDate;
+import java.time.YearMonth;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+/*
+ * Project: Personal Expense Tracker
+ * Student Name: Sarthak Lokhande
+ * Registration Number: 24BCY10313
+ */
+
+public class ExpenseManager {
+
+    private ArrayList<Expense> expenses;
+    private int nextId;
+
+    // Constructor
+    public ExpenseManager() {
+        expenses = new ArrayList<>();
+        nextId = 1;
+
+        loadExpenses();
+    }
+
+    // Load expenses from file
+    private void loadExpenses() {
+
+        List<Expense> loadedExpenses = FileManager.loadExpenses();
+
+        expenses.addAll(loadedExpenses);
+
+        for (Expense expense : expenses) {
+            if (expense.getId() >= nextId) {
+                nextId = expense.getId() + 1;
+            }
+        }
+    }
+
+    // Add a new expense
+    public void addExpense(
+            LocalDate date,
+            String category,
+            double amount,
+            String description) {
+
+        if (date == null) {
+            System.out.println("Date cannot be empty.");
+            return;
+        }
+
+        if (category == null || category.trim().isEmpty()) {
+            System.out.println("Category cannot be empty.");
+            return;
+        }
+
+        if (amount <= 0) {
+            System.out.println("Amount must be greater than zero.");
+            return;
+        }
+
+        if (description == null || description.trim().isEmpty()) {
+            description = "No description";
+        }
+
+        Expense expense = new Expense(
+                nextId,
+                date,
+                category.trim(),
+                amount,
+                description.trim()
+        );
+
+        expenses.add(expense);
+        nextId++;
+
+        System.out.println("Expense added successfully.");
+    }
+
+    // Display all expenses
+    public void viewAllExpenses() {
+
+        if (expenses.isEmpty()) {
+            System.out.println("No expenses found.");
+            return;
+        }
+
+        System.out.println("\n--- All Expenses ---");
+
+        for (Expense expense : expenses) {
+            System.out.println(expense);
+        }
+    }
+
+    // Delete expense using ID
+    public void deleteExpense(int id) {
+
+        Expense expenseToDelete = null;
+
+        for (Expense expense : expenses) {
+            if (expense.getId() == id) {
+                expenseToDelete = expense;
+                break;
+            }
+        }
+
+        if (expenseToDelete != null) {
+            expenses.remove(expenseToDelete);
+            System.out.println("Expense deleted successfully.");
+        } else {
+            System.out.println("Expense with ID " + id + " not found.");
+        }
+    }
+
+    // Search expenses by category or description
+    public void searchExpenses(String keyword) {
+
+        if (keyword == null || keyword.trim().isEmpty()) {
+            System.out.println("Search keyword cannot be empty.");
+            return;
+        }
+
+        String searchText = keyword.trim().toLowerCase();
+        boolean found = false;
+
+        System.out.println("\n--- Search Results ---");
+
+        for (Expense expense : expenses) {
+
+            String category = expense.getCategory().toLowerCase();
+            String description = expense.getDescription().toLowerCase();
+
+            if (category.contains(searchText)
+                    || description.contains(searchText)) {
+
+                System.out.println(expense);
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println("No matching expenses found.");
+        }
+    }
+
+    // Filter expenses by category
+    public void filterByCategory(String category) {
+
+        if (category == null || category.trim().isEmpty()) {
+            System.out.println("Category cannot be empty.");
+            return;
+        }
+
+        boolean found = false;
+
+        System.out.println("\n--- Category Results ---");
+
+        for (Expense expense : expenses) {
+
+            if (expense.getCategory()
+                    .equalsIgnoreCase(category.trim())) {
+
+                System.out.println(expense);
+                found = true;
+            }
+        }
+
+        if (!found) {
+            System.out.println(
+                    "No expenses found in category: " + category
+            );
+        }
+    }
+
+    // Calculate total expenses for a particular month
+    public double monthlyTotal(YearMonth month) {
+
+        if (month == null) {
+            return 0.0;
+        }
+
+        double total = 0.0;
+
+        for (Expense expense : expenses) {
+
+            YearMonth expenseMonth =
+                    YearMonth.from(expense.getDate());
+
+            if (expenseMonth.equals(month)) {
+                total += expense.getAmount();
+            }
+        }
+
+        return total;
+    }
+
+    // Display category-wise expense summary
+    public void categorySummary() {
+
+        if (expenses.isEmpty()) {
+            System.out.println("No expenses available.");
+            return;
+        }
+
+        HashMap<String, Double> summary = new HashMap<>();
+
+        for (Expense expense : expenses) {
+
+            String category = expense.getCategory();
+
+            double currentAmount =
+                    summary.getOrDefault(category, 0.0);
+
+            summary.put(
+                    category,
+                    currentAmount + expense.getAmount()
+            );
+        }
+
+        System.out.println("\n--- Category Summary ---");
+
+        for (Map.Entry<String, Double> entry : summary.entrySet()) {
+
+            System.out.printf(
+                    "%s : Rs. %.2f%n",
+                    entry.getKey(),
+                    entry.getValue()
+            );
+        }
+    }
+
+    // Sort expenses by amount from highest to lowest
+    public void sortByAmount() {
+
+        expenses.sort(
+                Comparator.comparingDouble(
+                        Expense::getAmount
+                ).reversed()
+        );
+
+        System.out.println(
+                "Expenses sorted by amount successfully."
+        );
+    }
+
+    // Sort expenses by date
+    public void sortByDate() {
+
+        expenses.sort(
+                Comparator.comparing(
+                        Expense::getDate
+                )
+        );
+
+        System.out.println(
+                "Expenses sorted by date successfully."
+        );
+    }
+
+    // Save all expenses
+    public void saveExpenses() {
+
+        FileManager.saveExpenses(expenses);
+    }
+
+    // Return list of expenses
+    public List<Expense> getExpenses() {
+
+        return expenses;
+    }
+}
+```
