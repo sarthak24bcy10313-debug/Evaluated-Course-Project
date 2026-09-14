@@ -1,0 +1,145 @@
+```java
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+/*
+ * Project: Personal Expense Tracker
+ * Student Name: Sarthak Lokhande
+ * Registration Number: 24BCY10313
+ */
+
+public class FileManager {
+
+    private static final String FILE_PATH = "data/expenses.csv";
+
+    // Save expenses to CSV file
+    public static void saveExpenses(List<Expense> expenses) {
+
+        File file = new File(FILE_PATH);
+        File folder = file.getParentFile();
+
+        // Create data folder if it does not exist
+        if (folder != null && !folder.exists()) {
+            folder.mkdirs();
+        }
+
+        try (BufferedWriter writer =
+                     new BufferedWriter(new FileWriter(file))) {
+
+            // Write CSV header
+            writer.write("ID,Date,Category,Amount,Description");
+            writer.newLine();
+
+            // Write each expense
+            for (Expense expense : expenses) {
+                writer.write(
+                        expense.getId() + ","
+                        + expense.getDate() + ","
+                        + expense.getCategory() + ","
+                        + expense.getAmount() + ","
+                        + expense.getDescription()
+                );
+                writer.newLine();
+            }
+
+            System.out.println("Expenses saved successfully.");
+
+        } catch (IOException e) {
+            System.out.println(
+                    "Error saving expenses: " + e.getMessage()
+            );
+        }
+    }
+
+    // Load expenses from CSV file
+    public static List<Expense> loadExpenses() {
+
+        List<Expense> expenses = new ArrayList<>();
+
+        File file = new File(FILE_PATH);
+
+        // If file does not exist, return empty list
+        if (!file.exists()) {
+            return expenses;
+        }
+
+        try (BufferedReader reader =
+                     new BufferedReader(new FileReader(file))) {
+
+            String line;
+
+            // Skip CSV header
+            reader.readLine();
+
+            while ((line = reader.readLine()) != null) {
+
+                if (line.trim().isEmpty()) {
+                    continue;
+                }
+
+                String[] parts = line.split(",", 5);
+
+                // Check whether record has all five fields
+                if (parts.length != 5) {
+                    System.out.println(
+                            "Skipping invalid expense record."
+                    );
+                    continue;
+                }
+
+                try {
+
+                    int id = Integer.parseInt(parts[0].trim());
+
+                    LocalDate date =
+                            LocalDate.parse(parts[1].trim());
+
+                    String category = parts[2].trim();
+
+                    double amount =
+                            Double.parseDouble(parts[3].trim());
+
+                    String description = parts[4].trim();
+
+                    Expense expense = new Expense(
+                            id,
+                            date,
+                            category,
+                            amount,
+                            description
+                    );
+
+                    expenses.add(expense);
+
+                } catch (NumberFormatException e) {
+
+                    System.out.println(
+                            "Skipping invalid number in expense record."
+                    );
+
+                } catch (Exception e) {
+
+                    System.out.println(
+                            "Skipping invalid expense record."
+                    );
+                }
+            }
+
+        } catch (IOException e) {
+
+            System.out.println(
+                    "Error loading expenses: " + e.getMessage()
+            );
+        }
+
+        return expenses;
+    }
+}
+```
